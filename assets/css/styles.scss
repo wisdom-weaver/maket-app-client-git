@@ -1,0 +1,215 @@
+$bg-color: black;
+$accent-color: #87C42B;
+$accent-color2: rgb(116, 239, 255);
+
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body{
+    background: $bg-color;
+    width:100%;
+    overflow:hidden;
+    min-height: 100vh;
+    max-height: 100vh;;
+}
+
+.data-block{
+    height: -webkit-fill-available;
+    box-sizing: border-box !important;
+    overflow:hidden;
+    max-height: 100vh;;
+    color: white;    
+    background-color: rgba(0, 0, 0, 0.445);
+    .topbanner{
+        min-height:6vh;
+        img{
+            width:180px;
+            object-fit: contain;
+            object-position: center;
+        }
+        .toptext{
+            color: $accent-color;
+            text-align:center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            span{
+                font-size: 10px;
+            }
+        }
+        
+    }
+    .tabs-container{
+        min-height:18vh;
+        border-radius: 25px;
+        width: auto;
+        margin: 0 auto;
+        max-height:18vh;
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        padding-bottom:5px;
+        
+        .tab-container{
+            padding: 5px 10px !important;
+            margin: 0 auto !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            .tab{
+                margin: 0 auto !important;
+                background-color: $accent-color !important;
+                border-radius:10px !important;
+                font-size: 10px !important;
+            }
+        }
+    }
+    .heading-container{
+        min-height: 10vh;
+        height: 10vh;
+        max-height: 10vh;
+        overflow:hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        h6{
+            width:100%;
+            text-align:center;
+            color: $accent-color;
+        }
+    }
+    .matchs-container{
+        overflow: auto;
+        padding: 10px 20px;
+        
+        background-image: url('../img/bg2.jpg');
+        background-position: center;
+        background-size: contain;
+        background-repeat: no-repeat;
+        
+        
+
+        .match-container{
+            font-size:15px;
+            border-left: 8px solid $accent-color;
+            padding-left: 8px;
+            background-color: $bg-color;
+        }
+
+        .tabledata{
+            font-size:7.5px;
+            background-color: $bg-color;
+
+            tr{border-bottom: 1px solid rgba($accent-color,0.12);}
+        }
+        .match-bg-cont{
+            background-color: $bg-color;
+            min-height: 100%;;
+            width:100%;
+        }
+    }
+    .bottom-banner{
+        min-height:6vh;
+        height:auto;
+        overflow:hidden;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+
+        .btn-container{
+            padding: 5px 10px !important;
+
+        }
+        
+        .banner-button{
+            font-size:8px !important;
+            border-radius:10px !important;
+        }
+        .blue-button{
+            background-color: $accent-color2 !important;
+        }
+        #allsports{
+            background-color: $accent-color !important;
+        }
+        .accent-color-button{
+            background-color: $accent-color !important;
+        }
+    }
+
+    hr{
+        border: 1px solid rgba($accent-color,0.12);
+    }
+
+}
+
+[type="radio"]:checked+span:after, [type="radio"].with-gap:checked+span:after {
+    background-color:$accent-color;
+}
+  [type="radio"]:checked+span:after, [type="radio"].with-gap:checked+span:before, 
+  [type="radio"].with-gap:checked+span:after {
+    border: 2px solid $accent-color;
+}
+
+.banner-button{
+    font-size:8px !important;
+    border-radius:10px !important;
+}
+
+.radio-input{
+    input:checked{
+        background-color: $accent-color !important;
+    }
+    span{
+        color: white !important;
+        font-size: 10px !important;
+    }
+}
+
+@media only screen and(min-width:400px){
+    .tab-container{min-width:12.5%;}
+}
+
+@media only screen and(max-width: 400px){
+    .tab-container{min-width:33.33%; width: auto; max-width: 40%;}
+}
+
+.accent-color-text{
+    color: $accent-color;
+}
+
+.accent-color-button{
+    font-size:10px !important;
+    border-radius:10px !important;
+    background-color: $accent-color !important;
+}
+
+.tabledata{
+    font-size:13px;
+    tr{border-bottom: 1px solid rgba($accent-color,0.12);}
+}
+
+.yellow-banner-button{
+    background-color: #CF992F !important;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+ 
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba( lighten($accent-color,3) ,0.3); 
+    border-radius: 6px;
+}
+ 
+::-webkit-scrollbar-thumb {
+    border-radius: 6px;
+    -webkit-box-shadow: inset 0 0 6px rgba($accent-color,1); 
+}

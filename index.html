@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temp||Tabs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body>
+
+    <!-- <div class="left-logo">
+        <img src="./assets/img/fairlay-logo.png" alt="">
+    </div> -->
+    <div class="row">
+        <div class="col s12 m10 offset-m1 l8 offset-l2 data-block">
+            <h6 class="topbanner center">
+                <img src="./assets//img/fairlay-logo.png" alt="">
+                <div class="toptext"> <i class="material-icons">arrow_back</i> <span>Scroll across for more tabs</span> <i class="material-icons">arrow_forward</i> </div>
+            </h6>
+            <div class="tabs-container"></div>
+            <hr>
+            <div class="heading-container"><h6 class="center">Fairlay App</h6></div>
+            <hr>
+            <div class="matchs-container"></div>
+            <hr>
+            <div class="bottom-banner center">
+                <div class="btn-container"><div id="allsports" class="btn btn-small banner-button accent-color-button">All Sports</div></div>
+                <div class="btn-container"><a target="_blank" href="https://fairlay.com/account/signup/?referral=a599f4d5-c046-47db-a630-0fc0bcf2211f"><div class="btn btn-small banner-button orange">Signup</div></a></div>
+                <div class="btn-container"><a target="_blank" href="https://fairlay.com/transaction/deposit/"><div class="btn btn-small banner-button orange">Deposit</div></a></div>
+                <div class="btn-container"><a target="_blank" href="https://fairlay.com/transaction/withdrawal/"><div class="btn btn-small banner-button orange">Withdrawal</div></a></div>
+                <div class="btn-container"><a target="_blank" href="#"><div class="btn btn-small banner-button yellow darken-2" > US/DECIMAL</div></a></div>
+                <div class="btn-container"><div onclick="showmodal()" class="btn btn-small banner-button blue">See Bets</div></div>
+            </div>
+        </div>
+    </div>
+    
+  <!-- Modal Structure -->
+  <div id="modal1" class="modal bottom-sheet grey darken-4 white-text">
+    <div class="modal-content">
+        <h4 class="accent-color-text">${obj.team}</h4>
+        <p class="white-text">
+            You are betting on team <strong class="accent-color-text">${obj.team}</strong>
+            in <br><strong class="accent-color-text">${obj.game}</strong> starting at <strong class="accent-color-text">${obj.time}</strong>
+        </p>
+    </div>
+    <div class="modal-footer grey darken-4 white-text">
+        <a href="#!" class="modal-close waves-effect waves-green btn accent-color-button">BET!!</a>
+    </div>
+  </div>
+
+
+    <!-- scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="./assets/js/main.js"></script>
+</body>
+</html>
