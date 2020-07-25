@@ -16,6 +16,9 @@ var checkedlist =[
     //{ id, category, subcategory, game, team, description, odds }
 ];
 
+var minimumSelections = 2;
+var maximumSelections = 5;
+
 
 function createid(){
 
@@ -134,8 +137,10 @@ function SelectCategory(cat){
     currentcategory = cat;
     currentsubcategory = currenttimegame = '';
     installSubcategoryTabs();
+    configureFrontEnd();
     //current();
     $('.heading-container h6').html(`${currentcategory}`);
+    setBackground(cat.trim().toLowerCase());
 }
 
 function installSubcategoryTabs(){
@@ -195,7 +200,7 @@ function SelectGame(game){
                     <span>${row.bodds}</span>
                 </span>
             </td>
-            <td>${row.mid}</td>
+            <td><a href="https://fairlay.com/market/${row.mid}" target="_blank" class="accent-link">${row.mid}</a></td>
         </tr>`;
     })
     html+="</table></div>";
@@ -206,8 +211,16 @@ function SelectGame(game){
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function configureFrontEnd(){
-    var calheight = $(window).height()- $('.data-block').height() +$('.matchs-container').height() -1;
+    var calheight = $(window).height()- $('.data-block').height() +$('.matchs-container').height() - 5;
     $('.matchs-container').height(calheight);
+}
+
+function setBackground(img){
+    $('.matchs-container').css('background-image'    , `url('./assets/img/${img}.jpg')`);
+    $('.matchs-container').css('background-position' , `center`);
+    $('.matchs-container').css('background-size'     , `contain`);
+    $('.matchs-container').css('background-repeat'   , `no-repeat`);
+    $('.matchs-container').css('background-color'    , `black`);
 }
 
 function reset(){
@@ -216,38 +229,16 @@ function reset(){
     $('.matchs-container').html('');
     $('.heading-container h6').html('Fairlay App');
     configureFrontEnd();
+    setBackground('bg2');
 }
-
-
-function init(){
-    console.log('init');
-    configureFrontEnd();
-    modalelement = document.querySelector('.modal');
-    modalinstance = M.Modal.init(modalelement);
-    handlesheet();
-    //handlesheet2();
-    configureFrontEnd();
-    //$('.modal').modal();
-    //refresh();
-}
-
-
-$('#allsports').click(reset);
-$(document).ready(init);
-$(document).resize(()=>{
-    configureFrontEnd();
-});
-$(document).scroll(()=>{
-    configureFrontEnd();
-});
 
 function current(){
     console.log('current',currentcategory,currentsubcategory, currenttimegame);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
-var elems = document.querySelectorAll('.modal');
-var instances = M.Modal.init(elems, options);
+var elems ;
+var instances ;
 
 function uncheckall(){
     $('input[type="radio"]').prop('checked',false);
@@ -273,6 +264,8 @@ function removeselection(uid){
     checkedlist.splice(uidindex,1);
     $(`#${uid}`).prop('checked',false);
     showmodal();
+    checkForSameGameSelections();
+    showmodal();
 }
 
 function getcheckobj(uid){
@@ -293,7 +286,9 @@ function getcheckobj(uid){
         timegame: current.gsx$time.$t+current.gsx$game.$t,
         description: current.gsx$description.$t,
         team: (tid == 'a')? current.gsx$teama.$t : current.gsx$teamb.$t ,
-        odds: (tid == 'a')? current.gsx$aodds.$t : current.gsx$bodds.$t 
+        odds: (tid == 'a')? current.gsx$aodds.$t : current.gsx$bodds.$t,
+        tid: tid,
+        highlight: false
     }
     return checkobj;
 }
@@ -310,19 +305,26 @@ function handlecheck(uid){
         checkedlist.splice(complementuidindex,1);
         $(`#${complementuid}`).prop('checked',false);
     }
-    if(checkedlist.length < 5){
+    
         if(uidindex > -1){
+            //already exists remove existing
             checkedlist.splice(uidindex,1);
             $(`#${uid}`).prop('checked',false);
         }else{
-            checkedlist.push(getcheckobj(uid));
-            $(`#${uid}`).prop('checked',true);
-            showmodal();
+            //new entry
+            if(checkedlist.length < maximumSelections){
+                //entry is less than limit
+                checkedlist.push(getcheckobj(uid));
+                $(`#${uid}`).prop('checked',true);
+                showmodal();
+            }else{
+                //entry is exceeding limit
+                alert('Maximum limit to make selections is 5 only.');
+                showmodal();
+            }
+            
         }
-    }else{
-        alert('Maximum limit to make selections is 5 only.');
-        showmodal();
-    }
+
     console.log(checkedlist);
     
 }
@@ -330,19 +332,20 @@ function handlecheck(uid){
 function showmodal(){
     var modalhtml =`
     <div class="modal-content">
-        <div class="btn-container center"><div class="btn btn-small banner-button blue">Create Parlay</div></div>
+        <div class="btn-container center"><div id="createparlay2" onclick="handlecreateparlay()" class="btn btn-small banner-button blue">Create Parlay</div></div>
         <p class="white-text">
-            <table class="tabledata">
+            <table class="tabledata-modal">
     `
 
     if(checkedlist.length>0){
         checkedlist.forEach(row=>{
             modalhtml+=`
-            <tr>
-                <td>${row.game}</td>
+            <tr `+ (row.highlight?`class="highlightrow"`:``) +` >
+                <td>${row.timegame}</td>
                 <td>${row.description}</td>
                 <td>${row.team}</td>
                 <td>${row.odds}</td>
+                <td><a href="https://fairlay.com/market/${row.mid}" target="_blank" class="accent-link">${row.mid}</a></td>
                 <td><a href="#!" class="modal-close waves-effect waves-green btn btn-small accent-color-button">BET!</a></td>
                 <td><a class="btn-floating btn-small waves-effect waves-light red"><i onclick=removeselection('${row.uid}')  class="material-icons">close</i></a></td>
             </tr>
@@ -393,3 +396,55 @@ function refresh(){
         installCategoryTabs();
     }
 }
+
+
+function handlecreateparlay(){
+    checkForSameGameSelections();
+    showmodal();
+    var highlightexists= false;
+    checkedlist.forEach((eachcheck,index)=>{
+        highlightexists = eachcheck.highlight | highlightexists;
+    });
+    if(highlightexists) alert('You have selected more than one selection from the same game');
+    //min linit check
+    if(checkedlist.length < minimumSelections) alert('Please make atleast 2 selections');
+
+}
+
+function checkForSameGameSelections(){
+    var highlights = [];
+    checkedlist.forEach((eachcheck,index)=>{
+        highlights.push(false);
+        checkedlist.forEach((eachcheck2,index2) => {
+            if(eachcheck.timegame == eachcheck2.timegame && index != index2){
+                highlights[index] = true;
+            }
+        });
+    });
+    console.log(highlights);
+    highlights.forEach((each,index)=>{ checkedlist[index].highlight = each });
+}
+
+
+
+function init(){
+    console.log('init');
+    configureFrontEnd();
+    modalelement = document.querySelector('.modal');
+    modalinstance = M.Modal.init(modalelement);
+    handlesheet();
+    //handlesheet2();
+    configureFrontEnd();
+    //$('.modal').modal();
+    //refresh();
+}
+
+$('#allsports').click(reset);
+
+$(document).ready(init);
+$(document).resize(()=>{
+    configureFrontEnd();
+});
+$(document).scroll(()=>{
+    configureFrontEnd();
+});
