@@ -19,6 +19,8 @@ var checkedlist =[
 var minimumSelections = 2;
 var maximumSelections = 5;
 
+var createparlaybtnenabled = true;
+
 
 function createid(){
 
@@ -252,6 +254,13 @@ function finduidinCheckedlist(uid){
         }
     });
 }
+function getuidobjincheckedlist(uid){
+    return checkedlist.find((elem,index)=>{
+        if(elem.uid == uid){
+            return true;
+        }
+    });
+}
 
 function checkallselected(){
     checkedlist.forEach(each=>{
@@ -288,7 +297,8 @@ function getcheckobj(uid){
         team: (tid == 'a')? current.gsx$teama.$t : current.gsx$teamb.$t ,
         odds: (tid == 'a')? current.gsx$aodds.$t : current.gsx$bodds.$t,
         tid: tid,
-        highlight: false
+        highlight: false,
+        madebet: false
     }
     return checkobj;
 }
@@ -305,11 +315,17 @@ function handlecheck(uid){
         checkedlist.splice(complementuidindex,1);
         $(`#${complementuid}`).prop('checked',false);
     }
-    
         if(uidindex > -1){
-            //already exists remove existing
-            checkedlist.splice(uidindex,1);
-            $(`#${uid}`).prop('checked',false);
+            //already exists 
+            if(!getuidobjincheckedlist(uid).madebet){
+                //bet is not made
+                checkedlist.splice(uidindex,1);
+                $(`#${uid}`).prop('checked',false);
+            }else{
+                //bet has been alredy made
+                alert('bet has been already made');
+            }
+            
         }else{
             //new entry
             if(checkedlist.length < maximumSelections){
@@ -332,7 +348,7 @@ function handlecheck(uid){
 function showmodal(){
     var modalhtml =`
     <div class="modal-content">
-        <div class="btn-container center"><div id="createparlay2" onclick="handlecreateparlay()" class="btn btn-small banner-button blue">Create Parlay</div></div>
+        <div class="btn-container center"><div id="createparlay2" onclick="handlecreateparlay()" class="btn btn-small banner-button blue `+( createparlaybtnenabled?``:`disabled` )+` ">Create Parlay</div></div>
         <p class="white-text">
             <table class="tabledata-modal">
     `
@@ -346,8 +362,16 @@ function showmodal(){
                 <td>${row.team}</td>
                 <td>${row.odds}</td>
                 <td><a href="https://fairlay.com/market/${row.mid}" target="_blank" class="accent-link">${row.mid}</a></td>
-                <td><a href="#!" class="modal-close waves-effect waves-green btn btn-small accent-color-button">BET!</a></td>
-                <td><a class="btn-floating btn-small waves-effect waves-light red"><i onclick=removeselection('${row.uid}')  class="material-icons">close</i></a></td>
+                `+
+                (
+                (!row.madebet)?
+                `<td><a href="#!" onclick="handlebet('${row.uid}')" class="waves-effect waves-green btn btn-small accent-color-button">BET!</a></td>
+                <td><a class="btn-floating btn-small waves-effect waves-light red"><i onclick=removeselection('${row.uid}')  class="material-icons">close</i></a></td>`
+                :
+                `<td><a href="#!"  class="waves-effect waves-green btn btn-small accent-color-button disabled ">BET!</a></td>
+                <td><a class="btn-floating btn-small waves-effect waves-light red disabled"><i  class="material-icons">close</i></a></td>`
+                )
+                +`
             </tr>
             `
         });
@@ -365,6 +389,24 @@ function showmodal(){
     `;
     $('.modal').html(modalhtml);
     openmodal();
+}
+
+function handlebet(uid){
+    disableBet(uid)
+    showmodal();
+}
+
+function enableBet(uid){
+    checkedlist[finduidinCheckedlist(uid)].madebet = false;
+}
+function disableBet(uid){
+    checkedlist[finduidinCheckedlist(uid)].madebet = true;
+}
+
+function disableallBet(){
+    checkedlist.forEach(eachcheck=>{
+        eachcheck.madebet = true;
+    })
 }
 
 function openmodal(){
@@ -400,7 +442,6 @@ function refresh(){
 
 function handlecreateparlay(){
     checkForSameGameSelections();
-    showmodal();
     var highlightexists= false;
     checkedlist.forEach((eachcheck,index)=>{
         highlightexists = eachcheck.highlight | highlightexists;
@@ -408,8 +449,19 @@ function handlecreateparlay(){
     if(highlightexists) alert('You have selected more than one selection from the same game');
     //min linit check
     if(checkedlist.length < minimumSelections) alert('Please make atleast 2 selections');
-
+    disableallBet();
+    disablecreateparlaybtn();
+    showmodal();
 }
+
+function enablecreateparlaybtn(){
+    createparlaybtnenabled = true;
+}
+function disablecreateparlaybtn(){
+    createparlaybtnenabled = false;
+}
+
+
 
 function checkForSameGameSelections(){
     var highlights = [];
