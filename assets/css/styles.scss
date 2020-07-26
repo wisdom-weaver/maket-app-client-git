@@ -184,7 +184,6 @@ body{
 .accent-color-text{
     color: $accent-color;
 }
-
 .accent-color-button{
     font-size:10px !important;
     border-radius:10px !important;
@@ -229,3 +228,8 @@ body{
 .accent-link:hover{
     color: $accent-color;
 }   
+
+.bet-button{
+    font-size:10px !important;
+    border-radius:10px !important;
+}

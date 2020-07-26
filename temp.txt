@@ -1,0 +1,2 @@
+<td><a href="#!" onclick="presscreatebet('${row.uid}')" class="waves-effect waves-green btn btn-small accent-color-button">BET!</a></td>
+<td><a class="btn-floating btn-small waves-effect waves-light red"><i onclick=removeselection('${row.uid}')  class="material-icons">close</i></a></td>

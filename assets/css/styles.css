@@ -289,4 +289,9 @@ body {
 .accent-link:hover {
   color: #87C42B;
 }
+
+.bet-button {
+  font-size: 10px !important;
+  border-radius: 10px !important;
+}
 /*# sourceMappingURL=styles.css.map */

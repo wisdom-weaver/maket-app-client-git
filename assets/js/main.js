@@ -247,14 +247,14 @@ function uncheckall(){
 }
 
 
-function finduidinCheckedlist(uid){
+function getuidIndexinCheckedlist(uid){
     return checkedlist.findIndex((elem,index)=>{
         if(elem.uid == uid){
             return true;
         }
     });
 }
-function getuidobjincheckedlist(uid){
+function getuidObjinCheckedlist(uid){
     return checkedlist.find((elem,index)=>{
         if(elem.uid == uid){
             return true;
@@ -269,7 +269,8 @@ function checkallselected(){
 }
 
 function removeselection(uid){
-    var uidindex = finduidinCheckedlist(uid);
+    var uidindex = getuidIndexinCheckedlist(uid);
+    endtimer(uid);
     checkedlist.splice(uidindex,1);
     $(`#${uid}`).prop('checked',false);
     showmodal();
@@ -298,7 +299,9 @@ function getcheckobj(uid){
         odds: (tid == 'a')? current.gsx$aodds.$t : current.gsx$bodds.$t,
         tid: tid,
         highlight: false,
-        madebet: false
+        state:1,
+        intervalfunc:'',
+        rand:0
     }
     return checkobj;
 }
@@ -307,8 +310,8 @@ function handlecheck(uid){
     console.log(uid);
     var mid =uid.slice(1);
     var complementuid = ((uid.charAt(0) == 'a')? 'b' : 'a' )+uid.slice(1);
-    var uidindex = finduidinCheckedlist(uid);
-    var complementuidindex = finduidinCheckedlist(complementuid);
+    var uidindex = getuidIndexinCheckedlist(uid);
+    var complementuidindex = getuidIndexinCheckedlist(complementuid);
     
     console.log('uid',uid,uidindex, '|', 'complementuid',complementuid, complementuidindex);
     if(complementuidindex>-1){
@@ -317,7 +320,7 @@ function handlecheck(uid){
     }
         if(uidindex > -1){
             //already exists 
-            if(!getuidobjincheckedlist(uid).madebet){
+            if(!getuidObjinCheckedlist(uid).createdbet){
                 //bet is not made
                 checkedlist.splice(uidindex,1);
                 $(`#${uid}`).prop('checked',false);
@@ -356,22 +359,50 @@ function showmodal(){
     if(checkedlist.length>0){
         checkedlist.forEach(row=>{
             modalhtml+=`
-            <tr `+ (row.highlight?`class="highlightrow"`:``) +` >
+            <tr class="${row.uid}row `+ (row.highlight?`highlightrow`:``) +`" >
                 <td>${row.timegame}</td>
                 <td>${row.description}</td>
                 <td>${row.team}</td>
                 <td>${row.odds}</td>
                 <td><a href="https://fairlay.com/market/${row.mid}" target="_blank" class="accent-link">${row.mid}</a></td>
-                `+
+                `
+                +
                 (
-                (!row.madebet)?
-                `<td><a href="#!" onclick="handlebet('${row.uid}')" class="waves-effect waves-green btn btn-small accent-color-button">BET!</a></td>
-                <td><a class="btn-floating btn-small waves-effect waves-light red"><i onclick=removeselection('${row.uid}')  class="material-icons">close</i></a></td>`
-                :
-                `<td><a href="#!"  class="waves-effect waves-green btn btn-small accent-color-button disabled ">BET!</a></td>
-                <td><a class="btn-floating btn-small waves-effect waves-light red disabled"><i  class="material-icons">close</i></a></td>`
+                    (row.state == 1)
+                    ?`  <td><a href="#!" onclick="createBet('${row.uid}')" class="waves-effect waves-green btn btn-small accent-color-button">Create Bet!</a></td>
+                        <td><a class="btn-floating btn-small waves-effect waves-light red" onclick=removeselection('${row.uid}')><i class="material-icons">close</i></a></td>`
+                    :``
                 )
-                +`
+                +
+                (
+                    (row.state == 2)
+                    ?`  <td><span class="yellow-text">Creating Bet...</span></td>
+                        <td><a class="btn-floating btn-small waves-effect waves-light red" onclick=removeselection('${row.uid}')><i class="material-icons">close</i></a></td>`
+                    :``
+                )
+                +
+                (
+                    (row.state == 3)
+                    ?`  <td><p class="center timer accent-color-text"> Timer Started. </p><a href="#!" onclick="placeBet('${row.uid}')" class="waves-effect waves-green btn btn-small bet-button blue">Place Bet</a></td>
+                        <td><a class="btn-floating btn-small waves-effect waves-light red" onclick=removeselection('${row.uid}')><i class="material-icons">close</i></a></td>`
+                    :``
+                )
+                +(
+                    (row.state == 4)
+                    ?`  <td><span class="blue-text">Placing Bet....</span></td>
+                        <td><a class="btn-floating btn-small waves-effect waves-light red" onclick=removeselection('${row.uid}')><i class="material-icons">close</i></a></td>`
+                    :``
+                )
+                +
+                (
+                    (row.state == 5)
+                    ?`  <td><span class="accent-color-text">Bet Created</span></td>
+                        <td><a class="btn-floating btn-small waves-effect waves-light red" onclick=removeselection('${row.uid}')><i class="material-icons">close</i></a></td>`
+                    :``
+                )
+                +
+                `
+
             </tr>
             `
         });
@@ -391,23 +422,6 @@ function showmodal(){
     openmodal();
 }
 
-function handlebet(uid){
-    disableBet(uid)
-    showmodal();
-}
-
-function enableBet(uid){
-    checkedlist[finduidinCheckedlist(uid)].madebet = false;
-}
-function disableBet(uid){
-    checkedlist[finduidinCheckedlist(uid)].madebet = true;
-}
-
-function disableallBet(){
-    checkedlist.forEach(eachcheck=>{
-        eachcheck.madebet = true;
-    })
-}
 
 function openmodal(){
     modalinstance.open();
@@ -439,6 +453,104 @@ function refresh(){
     }
 }
 
+function setState(uid,state){
+    checkedlist[getuidIndexinCheckedlist(uid)].state = state;
+    showmodal();
+}
+
+function requestCreateBet(uid){
+    console.log('request to createbet from ', uid);
+    disablecreateparlaybtn();
+    return new Promise((resolve,reject)=>{
+        setTimeout(()=>{
+            resolve(true)
+        },5000);
+    })
+}
+
+function requestPlaceBet(uid){
+    console.log('request to placebet from ', uid);
+    disablecreateparlaybtn();
+    return new Promise((resolve,reject)=>{
+        setTimeout(()=>{
+            resolve(true)
+        },5000);
+    })
+}
+
+function starttimer(uid){
+    var sec = 60;
+    var rand= Math.random();
+    checkedlist[getuidIndexinCheckedlist(uid)].rand = rand;
+    console.log(rand);
+    var interval = setInterval(()=>{
+        try{
+            if(checkedlist[getuidIndexinCheckedlist(uid)].rand == rand){
+                console.log('timer intact');
+                if(sec>0){
+                    if(sec<=20){
+                        $(`.${uid}row td .timer`).addClass('red');
+                        $(`.${uid}row td .timer`).removeClass('accent-color-text');
+                    }
+                    $(`.${uid}row td .timer`).html(`${('00'+Math.floor(sec/60)).slice(-2)}:${('00'+Math.floor(sec%60)).slice(-2)}`)
+                    sec--;
+                }else{
+                    setState(uid,1);
+                    clearInterval(interval);
+                }
+            }else{
+                console.log('timer not intact closing this previous interval');
+                clearInterval(interval);
+            }
+        }catch(err){}
+    },1000);
+}
+
+function endtimer(uid){
+    checkedlist[getuidIndexinCheckedlist(uid)].rand = 0;
+    try{
+        console.log('ending timer');
+        clearInterval(checkedlist[getuidIndexinCheckedlist(uid)].intervalfunc);
+        checkedlist[getuidIndexinCheckedlist(uid)].intervalfunc ='';
+    }catch(err){}
+    
+    $(`.${uid}row td .timer`).html(``);
+}
+
+function createBet(uid){
+    setState(uid,2);
+    disablecreateparlaybtn();
+    showmodal();
+    requestCreateBet(uid)
+    .then(res=>{
+        if(res){
+            console.log('createbet request accepted ', uid);
+            setState(uid,3);
+            enablecreateparlaybtn();
+            showmodal();
+            starttimer(uid);
+        }
+    })
+    .catch(err=>{console.log(err)});
+}
+
+function placeBet(uid){
+    setState(uid,4);
+    endtimer(uid);
+    disablecreateparlaybtn();
+    showmodal();
+    requestPlaceBet(uid)
+    .then(res=>{
+        if(res){
+            console.log('placebet request accepted ', uid);
+            setState(uid,5);
+            enablecreateparlaybtn();
+            showmodal();
+        }
+    })
+    .catch(err=>{console.log(err)});
+}
+
 
 function handlecreateparlay(){
     checkForSameGameSelections();
@@ -460,8 +572,6 @@ function enablecreateparlaybtn(){
 function disablecreateparlaybtn(){
     createparlaybtnenabled = false;
 }
-
-
 
 function checkForSameGameSelections(){
     var highlights = [];
