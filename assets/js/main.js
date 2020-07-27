@@ -20,8 +20,8 @@ var minimumSelections = 2;
 var maximumSelections = 5;
 
 var createparlaybtnenabled = true;
-
-
+var cartview = false;
+var cartNotOpenYet = true;
 function createid(){
 
 }
@@ -47,18 +47,17 @@ function handlesheet2(){
 
 function handlesheet(){
     console.log('handlesheet');
-    console.log('handle1');
     var starttime = getTime();
     $.get('https://spreadsheets.google.com/feeds/list/1GUKmbcDfOsQPsUTe1n4KmjFJvpes5Abs1y0_a6DDsRg/1/public/values?alt=json').then(json=>{
-        console.log(json.feed.entry.length);
+        //console.log('fetched sheet1',json.feed.entry.length);
         rawdata = json.feed.entry;
         return $.get('https://spreadsheets.google.com/feeds/list/1QmMWt2Vv5cyrGoTAl7uUhOC78q0c1e6B89Ay0jJCOEE/1/public/values?alt=json');
     }).then(json2=>{
-        console.log(json2.feed.entry.length);
+        //console.log('fetched sheet2',json2.feed.entry.length);
         rawdata = rawdata.concat(json2.feed.entry);
         return $.get('https://spreadsheets.google.com/feeds/list/1i9lVgv4yhWqfSDqlLxb5NZc7ldTz5nyQJbxFO-XljEQ/1/public/values?alt=json');
     }).then(json3=>{
-        console.log(json3.feed.entry.length);
+        //console.log('fetched sheet3',json3.feed.entry.length);
         rawdata = rawdata.concat(json3.feed.entry);
         var endtime = getTime();
         console.log('fetched in ', endtime - starttime);
@@ -115,10 +114,11 @@ function handlesheet(){
         console.log('rendered', renderendtime- renderstarttime);
 
     }).then(()=>{
-        installCategoryTabs();
-        ///refresh();
+        //installCategoryTabs();
+        restoreview();
+        restorecart();
     }).then(()=>{
-        //setInterval(handlesheet,30000);
+        setTimeout(handlesheet,2000);
     }).catch((err)=>{
         console.log(err);        
     });
@@ -146,70 +146,78 @@ function SelectCategory(cat){
 }
 
 function installSubcategoryTabs(){
-    var html =""
-    categories[currentcategory].data.forEach(subcategory=>{
-        html+=`<div onclick="SelectSubCategory('${subcategory}')" class="tab-container center"><div class="btn btn-small tab">${subcategory}</div></div>`;
-    });
-    $('.tabs-container').html(html);
-    configureFrontEnd();
+    try{
+        var html =""
+        categories[currentcategory].data.forEach(subcategory=>{
+            html+=`<div onclick="SelectSubCategory('${subcategory}')" class="tab-container center"><div class="btn btn-small tab">${subcategory}</div></div>`;
+        });
+        $('.tabs-container').html(html);
+        configureFrontEnd();
+    }catch(err){reset();}
 } 
 
 function SelectSubCategory(subcat){
-    currentsubcategory = subcat;
-    currenttimegame = '';
-    installSubcategoryTabs();
-    var html=`<div class="match-bg-cont">`;
-    categories[currentcategory][currentsubcategory].data.forEach(listelem=>{
-        html += `<div onclick="SelectGame('${listelem}')" class="match-container"><div class="match">${listelem}</div></div></br>`;
-    });
-    html+=`</div>`;
-    $('.matchs-container').html(html);
-    $('.heading-container h6').html(`${currentcategory} > ${currentsubcategory}`);
+    try{
+        currentsubcategory = subcat;
+        currenttimegame = '';
+        installSubcategoryTabs();
+        var html=`<div class="match-bg-cont">`;
+        categories[currentcategory][currentsubcategory].data.forEach(listelem=>{
+            html += `<div onclick="SelectGame('${listelem}')" class="match-container"><div class="match">${listelem}</div></div></br>`;
+        });
+        html+=`</div>`;
+        $('.matchs-container').html(html);
+        $('.heading-container h6').html(`${currentcategory} > ${currentsubcategory}`);
+    }catch(err){reset();}
     //current();
 }
 
 function SelectGame(game){
-    installSubcategoryTabs();
-    currenttimegame = game;
-    var html= `
-    <div class="match-bg-cont">
-    <table class="tabledata">
-    <tr>
-        <th>Description</th>
-        <th>Team A</th>
-        <th>A Odds</th>
-        <th>Team B</th>
-        <th>B Odds</th>
-        <th>BET>$250</th>
-    </tr>
-    `;
-
-    categories[currentcategory][currentsubcategory][currenttimegame].data.forEach((row,index)=>{
-        html+=`
+    try{
+        installSubcategoryTabs();
+        currenttimegame = game;
+        var html= `
+        <div class="match-bg-cont">
+        <table class="tabledata">
         <tr>
-            <td>${row.description}</td>
-            <td>${row.teama}</td>
-            <td>
-                <span onclick="handlecheck('a${row.mid}')" >
-                    <input name="a${row.mid}" id="a${row.mid}" type="radio" />
-                    <span>${row.aodds}</span>
-                </span>
-            </td>
-            <td>${row.teamb}</td>
-            <td>
-                <span onclick="handlecheck('b${row.mid}')" >
-                    <input name="b${row.mid}" id="b${row.mid}" type="radio" />
-                    <span>${row.bodds}</span>
-                </span>
-            </td>
-            <td><a href="https://fairlay.com/market/${row.mid}" target="_blank" class="accent-link">${row.mid}</a></td>
-        </tr>`;
-    })
-    html+="</table></div>";
-    $('.matchs-container').html(html);
-    $('.heading-container h6').html(`${currentcategory} > ${currenttimegame}`);
-    $('input[type="radio"]').prop('checked',false);
-    checkallselected();
+            <th>Description</th>
+            <th>Team A</th>
+            <th>A Odds</th>
+            <th>Team B</th>
+            <th>B Odds</th>
+            <th>BET>$250</th>
+        </tr>
+        `;
+
+        categories[currentcategory][currentsubcategory][currenttimegame].data.forEach((row,index)=>{
+            html+=`
+            <tr>
+                <td>${row.description}</td>
+                <td>${row.teama}</td>
+                <td>
+                    <span onclick="handlecheck('a${row.mid}')" >
+                        <input name="a${row.mid}" id="a${row.mid}" type="radio" />
+                        <span>${row.aodds}</span>
+                    </span>
+                </td>
+                <td>${row.teamb}</td>
+                <td>
+                    <span onclick="handlecheck('b${row.mid}')" >
+                        <input name="b${row.mid}" id="b${row.mid}" type="radio" />
+                        <span>${row.bodds}</span>
+                    </span>
+                </td>
+                <td><a href="https://fairlay.com/market/${row.mid}" target="_blank" class="accent-link">${row.mid}</a></td>
+            </tr>`;
+        })
+        html+="</table></div>";
+        $('.matchs-container').html(html);
+        $('.heading-container h6').html(`${currentcategory} > ${currenttimegame}`);
+        $('input[type="radio"]').prop('checked',false);
+        checkallselected();
+    }catch(err){
+        reset();
+    }
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function configureFrontEnd(){
@@ -246,6 +254,11 @@ function uncheckall(){
     $('input[type="radio"]').prop('checked',false);
 }
 
+function checkallselected(){
+    checkedlist.forEach(each=>{
+        $(`#${each.uid}`).prop('checked',true);;
+    })
+}
 
 function getuidIndexinCheckedlist(uid){
     return checkedlist.findIndex((elem,index)=>{
@@ -262,11 +275,7 @@ function getuidObjinCheckedlist(uid){
     });
 }
 
-function checkallselected(){
-    checkedlist.forEach(each=>{
-        $(`#${each.uid}`).prop('checked',true);;
-    })
-}
+
 
 function removeselection(uid){
     var uidindex = getuidIndexinCheckedlist(uid);
@@ -307,13 +316,13 @@ function getcheckobj(uid){
 }
 
 function handlecheck(uid){
-    console.log(uid);
+    //console.log(uid);
     var mid =uid.slice(1);
     var complementuid = ((uid.charAt(0) == 'a')? 'b' : 'a' )+uid.slice(1);
     var uidindex = getuidIndexinCheckedlist(uid);
     var complementuidindex = getuidIndexinCheckedlist(complementuid);
     
-    console.log('uid',uid,uidindex, '|', 'complementuid',complementuid, complementuidindex);
+    //console.log('uid',uid,uidindex, '|', 'complementuid',complementuid, complementuidindex);
     if(complementuidindex>-1){
         checkedlist.splice(complementuidindex,1);
         $(`#${complementuid}`).prop('checked',false);
@@ -321,11 +330,11 @@ function handlecheck(uid){
         if(uidindex > -1){
             //already exists 
             if(!getuidObjinCheckedlist(uid).createdbet){
-                //bet is not made
+                //bet is not made on this
                 checkedlist.splice(uidindex,1);
                 $(`#${uid}`).prop('checked',false);
             }else{
-                //bet has been alredy made
+                //bet has been alredy made on this
                 alert('bet has been already made');
             }
             
@@ -335,6 +344,7 @@ function handlecheck(uid){
                 //entry is less than limit
                 checkedlist.push(getcheckobj(uid));
                 $(`#${uid}`).prop('checked',true);
+                handlecreateparlaystate();
                 showmodal();
             }else{
                 //entry is exceeding limit
@@ -343,9 +353,7 @@ function handlecheck(uid){
             }
             
         }
-
-    console.log(checkedlist);
-    
+    //console.log(checkedlist);
 }
 
 function showmodal(){
@@ -383,7 +391,7 @@ function showmodal(){
                 +
                 (
                     (row.state == 3)
-                    ?`  <td><p class="center timer accent-color-text"> Timer Started. </p><a href="#!" onclick="placeBet('${row.uid}')" class="waves-effect waves-green btn btn-small bet-button blue">Place Bet</a></td>
+                    ?`  <td><p class="center timer accent-color-text">&nbsp;&nbsp;:&nbsp;&nbsp;</p><a href="#!" onclick="placeBet('${row.uid}')" class="waves-effect waves-green btn btn-small bet-button blue">Place Bet</a></td>
                         <td><a class="btn-floating btn-small waves-effect waves-light red" onclick=removeselection('${row.uid}')><i class="material-icons">close</i></a></td>`
                     :``
                 )
@@ -422,26 +430,38 @@ function showmodal(){
     openmodal();
 }
 
+function setcartview(){
+    cartview = !(document.querySelector('#modal1').style.display == 'none')
+    //console.log(document.querySelector('#modal1').style.display,(document.querySelector('#modal1').style.display == 'none'), cartview);
+}
+
+function cartViewingAccoringly(){
+    setcartview();
+    //console.log('cartview',cartview);
+    if(cartview) showmodal();
+}
 
 function openmodal(){
     modalinstance.open();
+    cartNotOpenYet =false;
+    setcartview();
 }
 function closemodal(){
     modalinstance.close();
+    setcartview();
 }
 
-
-function refresh(){
-    $('.matchs-container').html('');
-    $('.tabs-container').html('');
+//
+function restoreview(){
+    console.log('restoring view');
+    //$('.matchs-container').html('');
+    //$('.tabs-container').html('');
     //current();
-    console.log('updating view');
     if(!(currentcategory=='') && !(currentsubcategory=='') && !(currenttimegame=='') ) {
         //console.log('cat sub and game is loged');
+        //scrolltop = $('.matchs-container').scrollTop();
         SelectGame(currenttimegame);
-        if( !(currentcheck=='')){
-            setcheck(currentcheck, currentteam, currenttimegame, currentdescription, currentodds);
-        }
+        //$('.matchs-container').scrollTop(scrollTop);
     }else if(!(currentcategory=='') && !(currentsubcategory=='' )){
         //console.log('cat and sub is loged');
         SelectSubCategory(currentsubcategory);
@@ -451,6 +471,32 @@ function refresh(){
     }else{
         installCategoryTabs();
     }
+    checkallselected();
+}
+function restorecart(){
+    console.log('restoring cart');
+    checkedlist.forEach((each,index)=>{
+        var filterrow = rawdata.find((row)=>{
+            return (row.gsx$bet250.$t == each.mid);
+        });
+        //console.log(filterrow);
+        if(filterrow){
+            if(each.state == 1){
+                //only update whose bet has not  be created
+                each.category       = filterrow.gsx$category.$t;
+                each.subcategory    = filterrow.gsx$subcategory.$t;
+                each.time           = filterrow.gsx$time.$t;
+                each.game           = filterrow.gsx$game.$t;
+                each.timegame       = filterrow.gsx$time.$t+filterrow.gsx$game.$t;
+                each.description    = filterrow.gsx$description.$t;
+                each.team = (each.tid == 'a')? filterrow.gsx$teama.$t : filterrow.gsx$teamb.$t;
+                each.odds = (each.tid == 'a')? filterrow.gsx$aodds.$t : filterrow.gsx$bodds.$t;
+            }
+        }else{
+            checkedlist.splice(index,1);
+        }
+    });
+    if(!cartNotOpenYet) cartViewingAccoringly();
 }
 
 function setState(uid,state){
@@ -459,7 +505,7 @@ function setState(uid,state){
 }
 
 function requestCreateBet(uid){
-    console.log('request to createbet from ', uid);
+    //console.log('request to createbet from ', uid);
     disablecreateparlaybtn();
     return new Promise((resolve,reject)=>{
         setTimeout(()=>{
@@ -469,7 +515,7 @@ function requestCreateBet(uid){
 }
 
 function requestPlaceBet(uid){
-    console.log('request to placebet from ', uid);
+    //console.log('request to placebet from ', uid);
     disablecreateparlaybtn();
     return new Promise((resolve,reject)=>{
         setTimeout(()=>{
@@ -482,14 +528,14 @@ function starttimer(uid){
     var sec = 60;
     var rand= Math.random();
     checkedlist[getuidIndexinCheckedlist(uid)].rand = rand;
-    console.log(rand);
+    //console.log(rand);
     var interval = setInterval(()=>{
         try{
             if(checkedlist[getuidIndexinCheckedlist(uid)].rand == rand){
-                console.log('timer intact');
+                //console.log('timer intact');
                 if(sec>0){
                     if(sec<=20){
-                        $(`.${uid}row td .timer`).addClass('red');
+                        $(`.${uid}row td .timer`).addClass('red-text');
                         $(`.${uid}row td .timer`).removeClass('accent-color-text');
                     }
                     $(`.${uid}row td .timer`).html(`${('00'+Math.floor(sec/60)).slice(-2)}:${('00'+Math.floor(sec%60)).slice(-2)}`)
@@ -499,7 +545,7 @@ function starttimer(uid){
                     clearInterval(interval);
                 }
             }else{
-                console.log('timer not intact closing this previous interval');
+                //console.log('previous timer session is closing');
                 clearInterval(interval);
             }
         }catch(err){}
@@ -509,7 +555,7 @@ function starttimer(uid){
 function endtimer(uid){
     checkedlist[getuidIndexinCheckedlist(uid)].rand = 0;
     try{
-        console.log('ending timer');
+        //console.log('ending timer');
         clearInterval(checkedlist[getuidIndexinCheckedlist(uid)].intervalfunc);
         checkedlist[getuidIndexinCheckedlist(uid)].intervalfunc ='';
     }catch(err){}
@@ -524,14 +570,14 @@ function createBet(uid){
     requestCreateBet(uid)
     .then(res=>{
         if(res){
-            console.log('createbet request accepted ', uid);
+            //console.log('createbet request accepted ', uid);
             setState(uid,3);
-            enablecreateparlaybtn();
+            handlecreateparlaystate();
             showmodal();
             starttimer(uid);
         }
     })
-    .catch(err=>{console.log(err)});
+    .catch(err=>{console.log( 'create bet err response', uid, err )});
 }
 
 function placeBet(uid){
@@ -542,15 +588,32 @@ function placeBet(uid){
     requestPlaceBet(uid)
     .then(res=>{
         if(res){
-            console.log('placebet request accepted ', uid);
+            //console.log('placebet request accepted ', uid);
             setState(uid,5);
-            enablecreateparlaybtn();
+            handlecreateparlaystate();
             showmodal();
         }
     })
-    .catch(err=>{console.log(err)});
+    .catch(err=>{console.log('place bet err response ',uid ,err)});
 }
 
+function createBetAll(){
+    checkedlist.forEach(each=>{
+        if(each.state == 1) createBet(each.uid);
+    })
+}
+
+function areAllBetcreated(){
+    var bool = true;
+    checkedlist.forEach(each=>{
+        bool = (each.state >1) & bool;
+    })
+    return bool==1;
+}
+
+function handlecreateparlaystate(){
+    createparlaybtnenabled = !areAllBetcreated();
+}
 
 function handlecreateparlay(){
     checkForSameGameSelections();
@@ -558,11 +621,17 @@ function handlecreateparlay(){
     checkedlist.forEach((eachcheck,index)=>{
         highlightexists = eachcheck.highlight | highlightexists;
     });
-    if(highlightexists) alert('You have selected more than one selection from the same game');
+    if(highlightexists){
+        alert('You have selected more than one selection from the same game');
+        showmodal(); return;
+    }
     //min linit check
-    if(checkedlist.length < minimumSelections) alert('Please make atleast 2 selections');
-    disableallBet();
-    disablecreateparlaybtn();
+    if(checkedlist.length < minimumSelections){
+        alert('Please make atleast 2 selections');
+        showmodal(); return;
+    }
+    createBetAll();
+    handlecreateparlaystate();
     showmodal();
 }
 
@@ -583,7 +652,7 @@ function checkForSameGameSelections(){
             }
         });
     });
-    console.log(highlights);
+    //console.log(highlights);
     highlights.forEach((each,index)=>{ checkedlist[index].highlight = each });
 }
 
@@ -595,10 +664,7 @@ function init(){
     modalelement = document.querySelector('.modal');
     modalinstance = M.Modal.init(modalelement);
     handlesheet();
-    //handlesheet2();
     configureFrontEnd();
-    //$('.modal').modal();
-    //refresh();
 }
 
 $('#allsports').click(reset);
