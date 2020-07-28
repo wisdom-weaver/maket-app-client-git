@@ -20,8 +20,12 @@ var minimumSelections = 2;
 var maximumSelections = 5;
 
 var createparlaybtnenabled = true;
+var createparlaystate = 1;
+
 var cartview = false;
 var cartNotOpenYet = true;
+
+
 function createid(){
 
 }
@@ -132,13 +136,23 @@ function installCategoryTabs(){
         
     });
     $('.tabs-container').html(html);
+    handleScrollNoticification();
     configureFrontEnd();
+}
+
+function handleScrollNoticification(){
+    if(Math.round($('.tabs-container').prop('scrollWidth')) == Math.ceil($('.tabs-container').width()) || Math.round($('.tabs-container').prop('scrollWidth')) == Math.floor($('.tabs-container').width())){
+       $('.toptext').html('');
+    }else{
+       $('.toptext').html('<i class="material-icons">arrow_back</i> <span>Scroll across for more tabs</span> <i class="material-icons">arrow_forward</i>');
+    }
 }
 
 function SelectCategory(cat){
     currentcategory = cat;
     currentsubcategory = currenttimegame = '';
     installSubcategoryTabs();
+    handleScrollNoticification();
     configureFrontEnd();
     //current();
     $('.heading-container h6').html(`${currentcategory}`);
@@ -161,6 +175,7 @@ function SelectSubCategory(subcat){
         currentsubcategory = subcat;
         currenttimegame = '';
         installSubcategoryTabs();
+        handleScrollNoticification();
         var html=`<div class="match-bg-cont">`;
         categories[currentcategory][currentsubcategory].data.forEach(listelem=>{
             html += `<div onclick="SelectGame('${listelem}')" class="match-container"><div class="match">${listelem}</div></div></br>`;
@@ -221,7 +236,9 @@ function SelectGame(game){
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function configureFrontEnd(){
-    var calheight = $(window).height()- $('.data-block').height() +$('.matchs-container').height() - 5;
+    var tot = $(window).height();
+    $('.data-block').height(tot);
+    var calheight = $(window).height()- $('.topbanner').height() - $('.bottom-banner').height() - $('.tabs-container').height() - $('.heading-container').height() - 50;
     $('.matchs-container').height(calheight);
 }
 
@@ -344,7 +361,7 @@ function handlecheck(uid){
                 //entry is less than limit
                 checkedlist.push(getcheckobj(uid));
                 $(`#${uid}`).prop('checked',true);
-                handlecreateparlaystate();
+                //handlecreateparlaystate();
                 showmodal();
             }else{
                 //entry is exceeding limit
@@ -357,9 +374,32 @@ function handlecheck(uid){
 }
 
 function showmodal(){
+    //findcreateparlaystate();
     var modalhtml =`
     <div class="modal-content">
-        <div class="btn-container center"><div id="createparlay2" onclick="handlecreateparlay()" class="btn btn-small banner-button blue `+( createparlaybtnenabled?``:`disabled` )+` ">Create Parlay</div></div>
+        `
+        +
+        (
+            (createparlaystate == 1)
+            ?`<div class="btn-container center"><div id="createparlay2" onclick="handlecreateparlay()" class="btn btn-small banner-button blue ">Create Parlay</div></div>`:``
+        )
+        +
+        (
+            (createparlaystate == 2)
+            ?`<div class="btn-container center"><div id="createparlay2" class="btn btn-small banner-button blue disabled">Create Parlay</div><span class="pad yellow-text">Creating Parlay...</span></div>`:``
+        )
+        +
+        (
+            (createparlaystate == 3)
+            ?`<div class="btn-container center"><div id="createparlay2" class="btn btn-small banner-button blue ">Create Parlay</div><span class="pad green-text">Created Parlay</span></div>`:``
+        )
+        +
+        (
+            (createparlaystate == 4)
+            ?`<div class="btn-container center"><div id="createparlay2" class="btn btn-small banner-button blue ">Create Parlay</div><span class="pad red-text">Error Creating Parlay</span></div>`:``
+        )
+        +
+        `
         <p class="white-text">
             <table class="tabledata-modal">
     `
@@ -372,12 +412,11 @@ function showmodal(){
                 <td>${row.description}</td>
                 <td>${row.team}</td>
                 <td>${row.odds}</td>
-                <td><a href="https://fairlay.com/market/${row.mid}" target="_blank" class="accent-link">${row.mid}</a></td>
                 `
                 +
                 (
                     (row.state == 1)
-                    ?`  <td><a href="#!" onclick="createBet('${row.uid}')" class="waves-effect waves-green btn btn-small accent-color-button">Create Bet!</a></td>
+                    ?`  <td><div onclick="createBet('${row.uid}')" class="waves-effect waves-green btn btn-small accent-color-button">Create Bet!</div></td>
                         <td><a class="btn-floating btn-small waves-effect waves-light red" onclick=removeselection('${row.uid}')><i class="material-icons">close</i></a></td>`
                     :``
                 )
@@ -391,7 +430,7 @@ function showmodal(){
                 +
                 (
                     (row.state == 3)
-                    ?`  <td><p class="center timer accent-color-text">&nbsp;&nbsp;:&nbsp;&nbsp;</p><a href="#!" onclick="placeBet('${row.uid}')" class="waves-effect waves-green btn btn-small bet-button blue">Place Bet</a></td>
+                    ?`  <td><p class="center timer accent-color-text">&nbsp;&nbsp;:&nbsp;&nbsp;</p><div onclick="placeBet('${row.uid}')" class="waves-effect waves-green btn btn-small bet-button blue">Place Bet</div></td>
                         <td><a class="btn-floating btn-small waves-effect waves-light red" onclick=removeselection('${row.uid}')><i class="material-icons">close</i></a></td>`
                     :``
                 )
@@ -572,7 +611,7 @@ function createBet(uid){
         if(res){
             //console.log('createbet request accepted ', uid);
             setState(uid,3);
-            handlecreateparlaystate();
+            //handlecreateparlaystate();
             showmodal();
             starttimer(uid);
         }
@@ -590,7 +629,7 @@ function placeBet(uid){
         if(res){
             //console.log('placebet request accepted ', uid);
             setState(uid,5);
-            handlecreateparlaystate();
+            //handlecreateparlaystate();
             showmodal();
         }
     })
@@ -615,6 +654,28 @@ function handlecreateparlaystate(){
     createparlaybtnenabled = !areAllBetcreated();
 }
 
+function setcreateparlaystate(state){
+    createparlaystate = state;
+}
+
+//function findcreateparlaystate(){
+//    if( checkedlist.length == 0 ) setcreateparlaystate(1);
+//    for(let i =0; i< checkedlist.length;i++){
+//        if(checkedlist[i].state == 1){ setcreateparlaystate(1); break;}
+//        if(checkedlist[i].state == 2){ setcreateparlaystate(2); }
+//        if(checkedlist[i].state == 3){ setcreateparlaystate(3); }
+//    }
+//    //console.log(createparlaystate);
+//}
+
+function CreateParlay(){
+    return new Promise((resolve,reject)=>{
+        setTimeout(()=>{
+            resolve(true);
+        },5000);
+    })
+}
+
 function handlecreateparlay(){
     checkForSameGameSelections();
     var highlightexists= false;
@@ -630,8 +691,26 @@ function handlecreateparlay(){
         alert('Please make atleast 2 selections');
         showmodal(); return;
     }
-    createBetAll();
-    handlecreateparlaystate();
+    //createBetAll();
+    //handlecreateparlaystate();
+    setcreateparlaystate(2);
+    showmodal();
+    CreateParlay()
+    .then(res=>{
+        if(res){  setcreateparlaystate(3); showmodal(); }
+        else{ setcreateparlaystate(4); showmodal(); }
+    })
+    .then(()=>{
+        setTimeout(()=>{
+            setcreateparlaystate(1); showmodal();
+        },2000);
+    })
+    .catch(err=>{
+        setcreateparlaystate(4); showmodal();
+        setTimeout(()=>{
+            setcreateparlaystate(1); showmodal();
+        },2000);
+    });
     showmodal();
 }
 
